@@ -1,24 +1,22 @@
-spring:
-  h2:
-    console:
-      path: /h2-console
-
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: admin_viewer
-    password: password
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    database-platform: org.hibernate.dialect.H2Dialect
-
-  sql:
-    init:
-      mode: always
-
-server:
-  port: 4000
+# ADDED DOCKER POSTGRES
+#spring:
+#  h2:
+#    console:
+#      path: /h2-console
+#
+#  datasource:
+#    url: jdbc:h2:mem:testdb
+#    driver-class-name: org.h2.Driver
+#    username: admin_viewer
+#    password: password
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    database-platform: org.hibernate.dialect.H2Dialect
+#
+#  sql:
+#    init:
+#      mode: always
 
 # Go to localhost:4000/h2-console and enter same credentials to log in
