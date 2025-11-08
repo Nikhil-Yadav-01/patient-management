@@ -4,7 +4,6 @@ import com.rudraksha.patientservice.dto.PatientRequestDTO;
 import com.rudraksha.patientservice.dto.PatientResponseDTO;
 import com.rudraksha.patientservice.exception.EmailAlreadyExistsException;
 import com.rudraksha.patientservice.exception.PatientNotFoundException;
-import com.rudraksha.patientservice.mapper.PatientMapper;
 import com.rudraksha.patientservice.model.Patient;
 import com.rudraksha.patientservice.repository.PatientRepository;
 import lombok.AllArgsConstructor;
@@ -24,7 +23,7 @@ public class PatientService {
     public List<PatientResponseDTO> getPatients() {
         List<Patient> patients = patientRepository.findAll();
 
-        return patients.stream().map( patient ->
+        return patients.stream().map(patient ->
                 modelMapper.map(patient, PatientResponseDTO.class)
         ).toList();
     }
