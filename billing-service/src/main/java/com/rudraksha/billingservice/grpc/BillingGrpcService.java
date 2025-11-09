@@ -2,10 +2,10 @@ package com.rudraksha.billingservice.grpc;
 
 import billing.BillingRequest;
 import billing.BillingResponse;
+import billing.BillingServiceGrpc.BillingServiceImplBase;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
-import billing.BillingServiceGrpc.BillingServiceImplBase;
 
 @GrpcService
 @Slf4j
