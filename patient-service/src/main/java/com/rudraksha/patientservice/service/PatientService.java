@@ -39,11 +39,12 @@ public class PatientService {
         }
 
         Patient newPatient = patientRepository.save(modelMapper.map(patientRequestDTO, Patient.class));
-        log.warn("Patient created with id : {}", newPatient.getId());
 
         billingServiceGrpcClient.createBillingAccount(
                 newPatient.getId().toString(), newPatient.getName(), newPatient.getEmail()
         );
+
+        log.info("✅ Calling KafkaProducer.sendEvent for patient {}", newPatient.getId());
 
         return modelMapper.map(newPatient, PatientResponseDTO.class);
     }
