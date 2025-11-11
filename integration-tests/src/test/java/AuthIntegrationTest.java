@@ -34,6 +34,7 @@ public class AuthIntegrationTest {
 
         System.out.println("Generated token: " + response.jsonPath().getString("token"));
     }
+
     @Test
     public void shouldReturnUnauthorizedOnInvalidToken() {
 
@@ -45,11 +46,11 @@ public class AuthIntegrationTest {
                 """;
 
         RestAssured.given()
-            .contentType("application/json")
-            .body(loginPayload)
-            .when()
-            .post("auth/login")
-            .then()
-            .statusCode(401);
+                .contentType("application/json")
+                .body(loginPayload)
+                .when()
+                .post("auth/login")
+                .then()
+                .statusCode(401);
     }
 }

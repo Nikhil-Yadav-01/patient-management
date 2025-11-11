@@ -1,13 +1,13 @@
 package com.rudraksha.authservice.dto;
 
 public class LoginResponseDTO {
-  private final String token;
+    private final String token;
 
-  public LoginResponseDTO(String token) {
-    this.token = token;
-  }
+    public LoginResponseDTO(String token) {
+        this.token = token;
+    }
 
-  public String getToken() {
-    return token;
-  }
+    public String getToken() {
+        return token;
+    }
 }

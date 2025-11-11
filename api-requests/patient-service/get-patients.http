@@ -3,4 +3,5 @@
 
 GET http://localhost:4004/api/patients
 Authorization: Bearer {{token}}
+
 ###

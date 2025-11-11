@@ -6,4 +6,6 @@ Content-Type: application/json
   "password": "MySecret123!"
 }
 
-> {% client.global.set("token", response.body.token) %}
+> {%
+    client.global.set("token", response.body.token)
+%}

@@ -1,7 +1,4 @@
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.BeforeAll;
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
