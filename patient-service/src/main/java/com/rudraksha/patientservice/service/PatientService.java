@@ -5,10 +5,12 @@ import com.rudraksha.patientservice.dto.PatientResponseDTO;
 import com.rudraksha.patientservice.exception.EmailAlreadyExistsException;
 import com.rudraksha.patientservice.exception.PatientNotFoundException;
 import com.rudraksha.patientservice.grpc.BillingServiceGrpcClient;
+import com.rudraksha.patientservice.kafka.KafkaEventProducer;
 import com.rudraksha.patientservice.model.Patient;
 import com.rudraksha.patientservice.repository.PatientRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,7 @@ public class PatientService {
     private final PatientRepository patientRepository;
     private final ModelMapper modelMapper;
     private final BillingServiceGrpcClient billingServiceGrpcClient;
+    private final KafkaEventProducer kafkaEventProducer;
 
     public List<PatientResponseDTO> getPatients() {
         List<Patient> patients = patientRepository.findAll();
@@ -45,6 +48,7 @@ public class PatientService {
         );
 
         log.info("✅ Calling KafkaProducer.sendEvent for patient {}", newPatient.getId());
+        kafkaEventProducer.sendEvent(newPatient);
 
         return modelMapper.map(newPatient, PatientResponseDTO.class);
     }

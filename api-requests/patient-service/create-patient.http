@@ -5,8 +5,8 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "name": "Integrator2",
-  "email": "integrator2@test.com",
+  "name": "Kafka Connection",
+  "email": "kafkaConn@test.com",
   "address": "Integrator Address",
   "dateOfBirth": "1995-01-15",
   "registeredDate": "2025-05-28"
