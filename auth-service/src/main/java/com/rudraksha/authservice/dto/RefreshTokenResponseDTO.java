@@ -1,14 +1,12 @@
 package com.rudraksha.authservice.dto;
 
-import com.rudraksha.authservice.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class LoginResponseDTO {
+public class RefreshTokenResponseDTO {
 
     private String accessToken;
     private String refreshToken;
-    private Role role;
 }

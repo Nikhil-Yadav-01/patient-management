@@ -3,12 +3,13 @@ package com.rudraksha.authservice.dto;
 import com.rudraksha.authservice.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @AllArgsConstructor
 @Getter
-public class LoginResponseDTO {
-
-    private String accessToken;
-    private String refreshToken;
-    private Role role;
+@Setter
+public class RegisterRequestDTO {
+    private String email;
+    private String password;
+    private Role role; // PATIENT, ADMIN, DOCTOR
 }

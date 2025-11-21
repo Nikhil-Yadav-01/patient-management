@@ -3,7 +3,11 @@ package com.rudraksha.authservice.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
+@AllArgsConstructor
+@NoArgsConstructor
 public class LoginRequestDTO {
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be a valid email address")
