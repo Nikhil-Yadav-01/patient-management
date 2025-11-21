@@ -1,0 +1,9 @@
+### Register a new user
+POST http://localhost:4005/register
+Content-Type: application/json
+
+{
+  "email": "patient3@example.com",
+  "password": "Password123!",
+  "role": "PATIENT"
+}
