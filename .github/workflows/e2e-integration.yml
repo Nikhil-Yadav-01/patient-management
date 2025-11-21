@@ -1,0 +1,72 @@
+name: E2E Integration Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    services:
+      auth-db:
+        image: postgres:15
+        env:
+          POSTGRES_DB: ${{ secrets.AUTH_DB_NAME }}
+          POSTGRES_USER: ${{ secrets.AUTH_DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.AUTH_DB_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ${{ secrets.AUTH_DB_USER }}" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+
+      patient-db:
+        image: postgres:15
+        env:
+          POSTGRES_DB: ${{ secrets.PATIENT_DB_NAME }}
+          POSTGRES_USER: ${{ secrets.PATIENT_DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.PATIENT_DB_PASSWORD }}
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd="pg_isready -U ${{ secrets.PATIENT_DB_USER }}" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Docker login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull service images
+        run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/patient-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/billing-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/analytics-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
+
+      - name: Run services for E2E test
+        run: |
+          docker network create patient-network || true
+          docker run -d --name auth-service --network patient-network -e SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/${{ secrets.AUTH_DB_NAME }} -e SPRING_DATASOURCE_USERNAME=${{ secrets.AUTH_DB_USER }} -e SPRING_DATASOURCE_PASSWORD=${{ secrets.AUTH_DB_PASSWORD }} ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
+          docker run -d --name patient-service --network patient-network -e SPRING_DATASOURCE_URL=jdbc:postgresql://patient-db:5432/${{ secrets.PATIENT_DB_NAME }} -e SPRING_DATASOURCE_USERNAME=${{ secrets.PATIENT_DB_USER }} -e SPRING_DATASOURCE_PASSWORD=${{ secrets.PATIENT_DB_PASSWORD }} ${{ secrets.DOCKER_USERNAME }}/patient-service:latest
+          docker run -d --name billing-service --network patient-network -e BILLING_SERVICE_ADDRESS=billing-service -e BILLING_SERVICE_GRPC_PORT=9001 ${{ secrets.DOCKER_USERNAME }}/billing-service:latest
+          docker run -d --name analytics-service --network patient-network ${{ secrets.DOCKER_USERNAME }}/analytics-service:latest
+          docker run -d --name api-gateway --network patient-network ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
+
+      - name: Run Integration Tests
+        run: |
+          echo "Run your integration test scripts here, e.g., ./gradlew test or mvn verify"
+
+      - name: Tear down
+        run: |
+          docker rm -f auth-service patient-service billing-service analytics-service api-gateway
+          docker network rm patient-network || true
