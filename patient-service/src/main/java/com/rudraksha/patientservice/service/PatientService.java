@@ -10,7 +10,6 @@ import com.rudraksha.patientservice.model.Patient;
 import com.rudraksha.patientservice.repository.PatientRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
