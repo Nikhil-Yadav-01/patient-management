@@ -10,7 +10,7 @@ public class ApiGatewayApplication {
         SpringApplication.run(ApiGatewayApplication.class, args);
 
 
-        System.out.println("Added CI CD");
+        System.out.println("Added CI/CD");
     }
 
 }
