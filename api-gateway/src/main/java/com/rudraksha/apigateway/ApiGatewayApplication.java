@@ -8,6 +8,9 @@ public class ApiGatewayApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(ApiGatewayApplication.class, args);
+
+
+        System.out.println("Added CI CD");
     }
 
 }
