@@ -1,72 +1,94 @@
 name: E2E Integration Tests
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  integration-test:
+  e2e-tests:
     runs-on: ubuntu-latest
     services:
       auth-db:
         image: postgres:15
         env:
-          POSTGRES_DB: ${{ secrets.AUTH_DB_NAME }}
           POSTGRES_USER: ${{ secrets.AUTH_DB_USER }}
           POSTGRES_PASSWORD: ${{ secrets.AUTH_DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.AUTH_DB_NAME }}
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U ${{ secrets.AUTH_DB_USER }}" 
-          --health-interval=10s 
-          --health-timeout=5s 
-          --health-retries=5
+          --health-cmd "pg_isready -U ${{ secrets.AUTH_DB_USER }}" 
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
       patient-db:
         image: postgres:15
         env:
-          POSTGRES_DB: ${{ secrets.PATIENT_DB_NAME }}
           POSTGRES_USER: ${{ secrets.PATIENT_DB_USER }}
           POSTGRES_PASSWORD: ${{ secrets.PATIENT_DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.PATIENT_DB_NAME }}
         ports:
           - 5433:5432
         options: >-
-          --health-cmd="pg_isready -U ${{ secrets.PATIENT_DB_USER }}" 
-          --health-interval=10s 
-          --health-timeout=5s 
-          --health-retries=5
+          --health-cmd "pg_isready -U ${{ secrets.PATIENT_DB_USER }}" 
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      kafka:
+        image: apache/kafka:latest
+        ports:
+          - 9092:9092
+          - 9093:9093
+          - 9094:9094
+        options: >-
+          --network internal
+        env:
+          KAFKA_NODE_ID: 0
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+          KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_NUM_PARTITIONS: 1
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Docker login
-        uses: docker/login-action@v2
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          java-version: 21
+          distribution: temurin
 
-      - name: Pull service images
+      - name: Build all services
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/patient-service:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/billing-service:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/analytics-service:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
+          cd auth-service && mvn clean package -DskipTests
+          cd ../patient-service && mvn clean package -DskipTests
+          cd ../analytics-service && mvn clean package -DskipTests
+          cd ../billing-service && mvn clean package -DskipTests
+          cd ../api-gateway && mvn clean package -DskipTests
 
-      - name: Run services for E2E test
+      - name: Start services with Docker Compose
         run: |
-          docker network create patient-network || true
-          docker run -d --name auth-service --network patient-network -e SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/${{ secrets.AUTH_DB_NAME }} -e SPRING_DATASOURCE_USERNAME=${{ secrets.AUTH_DB_USER }} -e SPRING_DATASOURCE_PASSWORD=${{ secrets.AUTH_DB_PASSWORD }} ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
-          docker run -d --name patient-service --network patient-network -e SPRING_DATASOURCE_URL=jdbc:postgresql://patient-db:5432/${{ secrets.PATIENT_DB_NAME }} -e SPRING_DATASOURCE_USERNAME=${{ secrets.PATIENT_DB_USER }} -e SPRING_DATASOURCE_PASSWORD=${{ secrets.PATIENT_DB_PASSWORD }} ${{ secrets.DOCKER_USERNAME }}/patient-service:latest
-          docker run -d --name billing-service --network patient-network -e BILLING_SERVICE_ADDRESS=billing-service -e BILLING_SERVICE_GRPC_PORT=9001 ${{ secrets.DOCKER_USERNAME }}/billing-service:latest
-          docker run -d --name analytics-service --network patient-network ${{ secrets.DOCKER_USERNAME }}/analytics-service:latest
-          docker run -d --name api-gateway --network patient-network ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
+          docker-compose -f docker-compose-e2e.yml up -d
 
-      - name: Run Integration Tests
-        run: |
-          echo "Run your integration test scripts here, e.g., ./gradlew test or mvn verify"
+      - name: Wait for services to be healthy
+        run: sleep 30
 
-      - name: Tear down
-        run: |
-          docker rm -f auth-service patient-service billing-service analytics-service api-gateway
-          docker network rm patient-network || true
+      - name: Run integration tests
+        run: mvn -f integration-tests/pom.xml clean test
+
+      - name: Tear down services
+        run: docker-compose -f docker-compose-e2e.yml down
