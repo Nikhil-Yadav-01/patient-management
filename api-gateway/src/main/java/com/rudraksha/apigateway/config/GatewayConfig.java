@@ -12,10 +12,12 @@ public class GatewayConfig {
     // Local: "http://localhost:4000"
     // Docker: "http://patient-service:4000" (use container name)
     private static final String PATIENT_SERVICE_URI = "http://patient-service:4000";
+//     "http://host.docker.internal:4000"
 
     // Local: "http://localhost:4005"
     // Docker: "http://auth-service:4005" (use container name)
     private static final String AUTH_SERVICE_URI = "http://auth-service:4005";
+//    "http://host.docker.internal:4005"
 
     private final JwtValidationGatewayFilterFactory jwtValidationFilter;
 
